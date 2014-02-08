@@ -49,11 +49,11 @@ class TwitterBootstrapFormFor::FormBuilder < ActionView::Helpers::FormBuilder
   def label(attribute, text = '', options = {}, &block)
     text, attribute = attribute, nil if attribute.kind_of? String
 
-    options = { :class => 'control-label' }.merge(options)
+    options = { :class => 'control-label'}.merge(options)
     id      = _wrapper_id      attribute, 'control_group'
     classes = _wrapper_classes attribute, 'control-group'
 
-    template.content_tag(:div, :id => id, :class => classes) do
+    template.content_tag(:div, :id => id, :class => classes, 'vl-control-group' => '') do
       template.concat case
         when attribute && text then super(attribute, text, options, &nil)
         when attribute         then super(attribute, nil,  options, &nil)
@@ -150,6 +150,7 @@ class TwitterBootstrapFormFor::FormBuilder < ActionView::Helpers::FormBuilder
 end
 
 class TwitterBootstrapFormFor::FormControls < ActionView::Helpers::FormBuilder
+  include ActionView::Helpers::FormTagHelper
   attr_reader :template
   attr_reader :object
   attr_reader :object_name
@@ -160,13 +161,21 @@ class TwitterBootstrapFormFor::FormControls < ActionView::Helpers::FormBuilder
       add_on  = options.delete(:add_on)
       tag     = add_on.present? ? :div : :span
       classes = [ "input", add_on ].compact.join('-')
+      options['ng-model'] = "#{object_name}['#{attribute}']"
+      options['id'] = "#{object_name}_#{attribute}"
+      options[:name] = attribute
 
       template.concat(template.content_tag(tag, :class => classes) do
         block.call if block.present? && add_on == :prepend
-        template.concat super attribute, *(args << options)
+        if input==:select
+          template.concat(send("select_tag", attribute, *(args << options)))
+        else
+          template.concat(send("#{input}_tag", attribute, object.nil? ? nil : object.send(attribute), *(args << options)))
+        end
         block.call if block.present? && add_on != :prepend
       end)
       template.concat(self.error_span(attribute)) if self.errors_on?(attribute)
+      # template.concat(content_tag(:div, 'Required field', :class => 'help-block errors', 'vl-appear' => "pg_form.#{options[:name]}.$error.required")) if options.has_key?('ng-required')
     end
   end
 
