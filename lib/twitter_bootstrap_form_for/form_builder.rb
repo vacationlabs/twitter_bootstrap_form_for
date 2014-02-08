@@ -164,6 +164,7 @@ class TwitterBootstrapFormFor::FormControls < ActionView::Helpers::FormBuilder
       options['ng-model'] = "#{object_name}['#{attribute}']"
       options['id'] = "#{object_name}_#{attribute}"
       options[:name] = attribute
+      options['ng-init'] = (options['ng-model'] + '=' + options.delete(:prefill_with)) if options[:prefill_with].present?
 
       template.concat(template.content_tag(tag, :class => classes) do
         block.call if block.present? && add_on == :prepend
