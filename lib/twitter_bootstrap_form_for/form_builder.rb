@@ -161,10 +161,14 @@ class TwitterBootstrapFormFor::FormControls < ActionView::Helpers::FormBuilder
       add_on  = options.delete(:add_on)
       tag     = add_on.present? ? :div : :span
       classes = [ "input", add_on ].compact.join('-')
-      options['ng-model'] = "#{object_name}['#{attribute}']"
+      options['ng-model'] = options.delete('ng-model') || options.delete(:ng_model) || "#{object_name}['#{attribute}']"
       options['id'] = "#{object_name}_#{attribute}"
       options[:name] = attribute
       options['ng-init'] = (options['ng-model'] + '=' + options.delete(:prefill_with)) if options[:prefill_with].present?
+      options['ng-required'] = options.delete(:required) if options[:required].present?
+      options['ng-maxlength'] = options.delete(:maxlength) if options[:maxlength].present?
+      options['ng-minlength'] = options.delete(:minlength) if options[:minlength].present?
+      help_text = options.delete(:help_block) || options.delete(:help_block)
 
       template.concat(template.content_tag(tag, :class => classes) do
         block.call if block.present? && add_on == :prepend
@@ -175,6 +179,7 @@ class TwitterBootstrapFormFor::FormControls < ActionView::Helpers::FormBuilder
         end
         block.call if block.present? && add_on != :prepend
       end)
+      template.concat(content_tag(:div, help_text, :class => "help-block")) if help_text.present?
       template.concat(self.error_span(attribute)) if self.errors_on?(attribute)
       # template.concat(content_tag(:div, 'Required field', :class => 'help-block errors', 'vl-appear' => "pg_form.#{options[:name]}.$error.required")) if options.has_key?('ng-required')
     end
